@@ -50,3 +50,16 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# macOS garbage
+.DS_Store
+
+# local scratchpad folder
+scratchpad/
+
+# local lib in projects folder
+projects/lib/
+
+# wasm & wat files
+*.wasm
+*.wat
