@@ -2,9 +2,80 @@
 
 A collection of C3 projects demonstrating various aspects of the C3 programming language.
 
-## Prerequisites
+## Quick Start with Dev Container
 
-This project is designed to work in a dev container with the C3 compiler already installed. Make sure you have:
+This project includes a complete dev container configuration for instant setup:
+
+### Option 1: VS Code Dev Container (Recommended)
+1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) in VS Code
+2. Clone this repository
+3. Open the folder in VS Code
+4. When prompted, click "Reopen in Container" or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+5. The container will automatically build and configure everything needed
+
+### Option 2: Direct Docker Usage
+```bash
+# Pull the pre-built image
+docker pull brakmic/c3dev:latest
+
+# Run with volume mount
+docker run -it --rm -v $(pwd):/host_workspace brakmic/c3dev:latest
+```
+
+## Dev Container Features
+
+The `.devcontainer/` configuration provides:
+
+### Included Tools
+- **C3 Compiler** (`c3c`) - Latest stable release with LSP support
+- **WebAssembly Tools** (`wasm2wat`, `wasm-validate`, `wasm-objdump`)
+- **Node.js 22** with npm, yarn, TypeScript, and development tools
+- **Docker** engine for containerized development
+- **Build Tools** - GCC 14, CMake, Ninja, Make
+- **Development Utilities** - Git, Python 3, lsd, nano with syntax highlighting
+
+### VS Code Integration
+- **C3 Language Extension** - Syntax highlighting and LSP support
+- **Optimized Settings** - File exclusions and workspace configuration
+- **Multi-folder Workspace** - Organized project structure
+
+### Container Configuration
+- **User**: `c3dev` with sudo privileges
+- **Networking**: Custom Docker network for multi-container development
+- **Mounts**: Host workspace accessible at `/host_workspace`
+- **Workspace Setup**: Automated folder structure creation
+
+The `setup-workspace.mjs` script automatically creates a VS Code workspace with organized folders:
+- DevContainer Workspace (`/workspace`)
+- Host Workspace (`/host_workspace`) 
+- Projects (`/host_workspace/projects`)
+- Scratchpad (`/host_workspace/scratchpad`)
+
+## Project Examples
+
+See the [projects directory](projects/README.md) for detailed examples including:
+- Hello World program
+- WebAssembly math library
+- Build instructions and usage examples
+
+## Repository Structure
+
+```
+/
+├── .devcontainer/
+│   ├── devcontainer.json          # VS Code dev container configuration
+│   └── setup-workspace.mjs        # Automated workspace setup script
+├── .gitignore                     # Git ignore patterns
+├── README.md                      # This file
+├── LICENSE                        # MIT license
+├── projects/                      # Example C3 projects
+│   └── README.md                  # Project documentation
+└── scratchpad/                    # Local development folder (gitignored)
+```
+
+## Prerequisites (Manual Setup)
+
+If not using the dev container, ensure you have:
 - C3 compiler (`c3c`) available in your PATH
 - WebAssembly Binary Toolkit (WABT) for WASM projects
 - Python 3 for serving web projects
@@ -16,106 +87,16 @@ wasm2wat --version
 python3 --version
 ```
 
-## Projects Overview
-
-### 1. Hello World (`hello/`)
-A simple "Hello, World!" program demonstrating basic C3 syntax and module structure.
-
-### 2. Math Library WASM (`wasm/`)
-A mathematical library with basic arithmetic operations compiled to WebAssembly for use in web browsers.
-
-## Building and Running Projects
-
-### Hello World Project
-
-Navigate to the hello directory and compile:
-```bash
-cd hello
-c3c compile hello.c3
-./hello
-```
-
-Expected output:
-```
-Hello, world!
-```
-
-### Math Library WASM Project
-
-#### Step 1: Compile to WebAssembly
-```bash
-cd wasm
-c3c compile --target wasm32 -o math_lib math_lib.c3
-```
-
-#### Step 2: Verify WASM compilation
-```bash
-# Check if WASM file was created
-ls -la math_lib.wasm
-
-# Validate the WASM file
-wasm-validate math_lib.wasm
-
-# Convert to text format for inspection (optional)
-wasm2wat math_lib.wasm -o math_lib.wat
-```
-
-#### Step 3: Serve the web application
-```bash
-# Start Python HTTP server in the wasm directory
-python3 -m http.server 3000
-```
-
-#### Step 4: Open in browser
-```bash
-# Open the web application
-"$BROWSER" http://localhost:3000
-```
-
-The web page will load the WASM module and test the mathematical functions (add, subtract, multiply, divide) with sample values.
-
-### Advanced WASM Development
-
-#### Inspecting WASM exports
-```bash
-# List exported functions
-wasm-objdump -x math_lib.wasm
-
-# Decompile to readable format
-wasm-decompile math_lib.wasm -o math_lib.dcmp
-```
-
-#### Optimization options
-```bash
-# Compile with optimization
-c3c compile --target wasm32 -O3 -o math_lib.wasm math_lib.c3
-
-# Check file size difference
-lsd -lh math_lib.wasm
-```
-
-## Project Structure
-
-```
-projects/
-├── README.md
-├── LICENSE
-├── hello/
-│   ├── hello.c3           # Simple hello world program
-│   └── hello              # Compiled executable (after build)
-└── wasm/
-    ├── math_lib.c3        # Math library source
-    ├── math_lib.wasm      # Compiled WASM module (after build)
-    ├── math_lib.wat       # Text representation (optional)
-    ├── index.html         # Web interface for testing
-    └── favicons/          # PNG favicon images
-```
-
-## Web Integration
-
-The WASM math library exports four functions (`add`, `sub`, `mul`, `div`) that can be called from JavaScript. The included HTML file demonstrates how to load and use the WASM module in a web browser.
-
 ## Troubleshooting
+
+### Dev Container Issues
+```bash
+# Rebuild the container if extensions fail to install
+# VS Code Command Palette: "Dev Containers: Rebuild Container"
+
+# Check container logs for setup errors
+docker logs <container_id>
+```
 
 ### C3 Compiler Issues
 ```bash
@@ -126,26 +107,15 @@ which c3c
 c3c --help
 ```
 
-### WASM Compilation Issues
-```bash
-# Check target support
-c3c compile --list-targets
+## Contributing
 
-# Validate WASM output
-wasm-validate math_lib.wasm
-```
+1. Fork the repository
+2. Open in VS Code with dev containers
+3. Make your changes in the containerized environment
+4. Test your projects following the [project documentation](projects/README.md)
+5. Submit a pull request
 
-### Web Server Issues
-```bash
-# Check if port 3000 is available
-netstat -tlnp | grep 3000
-
-# Use alternative port
-python3 -m http.server 8000
-```
-
-### Browser CORS Issues
-Make sure to serve files via HTTP server rather than opening HTML files directly (`file://` protocol) to avoid CORS restrictions when loading WASM modules.
+The dev container ensures all contributors have the same development environment.
 
 ## License
 
