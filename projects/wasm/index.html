@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>C3 Math Library WASM Test</title>
+    <meta charset="UTF-8">
+    <link rel="icon" href="favicons/webassembly.ico" type="image/x-icon">s
+</head>
+<body>
+    <h1>C3 Math Library Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        async function loadWasm() {
+            try {
+                const wasmModule = await WebAssembly.instantiateStreaming(fetch('math_lib.wasm'));
+                const { add, sub, mul, div } = wasmModule.instance.exports;
+                
+                const output = document.getElementById('output');
+                
+                // Let's try the functions with some test cases
+                const tests = [
+                    `add(5.5, 3.2) = ${add(5.5, 3.2)}`,
+                    `sub(13.0, 7.6) = ${sub(13.0, 7.6)}`,
+                    `mul(1.2, 4.9) = ${mul(1.2, 4.9)}`,
+                    `div(55.0, 6.2) = ${div(55.0, 6.2)}`
+                ];
+                
+                output.innerHTML = tests.map(test => `<p>${test}</p>`).join('');
+                
+            } catch (error) {
+                console.error('Error loading WASM:', error);
+                document.getElementById('output').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+        
+        loadWasm();
+    </script>
+</body>
+</html>
