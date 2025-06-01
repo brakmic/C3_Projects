@@ -1,4 +1,4 @@
-# C3_Projects
+# C3 Projects
 
 A collection of C3 projects demonstrating various aspects of the C3 programming language.
 
