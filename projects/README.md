@@ -18,7 +18,7 @@ A demonstration of C library integration with C3, showing how to bind and call C
 
 ### 4. Web Server (`webserver/`)
 
-A minimal HTTP web server built with C3 using libmicrohttpd, featuring JSON API endpoints and favicon handling.
+A minimal HTTP web server built with C3 using libmicrohttpd, featuring JSON API endpoints.
 
 ## Building and Running Projects
 
@@ -167,7 +167,6 @@ projects/
 │   ├── Makefile                  # Build automation
 └── webserver/
     ├── webserver.c3              # HTTP server implementation
-    ├── webserver                 # Compiled executable (after build)
     └── favicon.ico               # Optional favicon file
 ```
 
