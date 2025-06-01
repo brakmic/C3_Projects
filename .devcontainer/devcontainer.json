@@ -1,0 +1,31 @@
+{
+  "name": "C3 Development Environment",
+  "image": "brakmic/c3dev:latest",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "files.exclude": {
+          "**/.git": true,
+          "**/.DS_Store": true
+        }
+      },
+      "extensions": [
+        "c3.vscode-c3"
+      ]
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind",
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "forwardPorts": [],
+  "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
+  "runArgs": ["--network=devnetwork"],
+  "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace",
+  "remoteUser": "c3dev",
+  "containerEnv": {
+    "HOST_WORKSPACE": "${localWorkspaceFolder}"
+  }
+}
