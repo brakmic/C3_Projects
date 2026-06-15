@@ -18,10 +18,12 @@
   },
   "mounts": [
     "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind",
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localEnv:HOME}/.ssh,target=/home/c3dev/.host-ssh,type=bind,consistency=cached"
   ],
+  "postAttachCommand": "ln -sf /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null || true",
   "forwardPorts": [],
-  "initializeCommand": "docker network inspect devnetwork >/dev/null 2>&1 || docker network create devnetwork",
+  "initializeCommand": "docker network inspect devnetwork || docker network create devnetwork",
   "runArgs": ["--network=devnetwork"],
   "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace",
   "remoteUser": "c3dev",
