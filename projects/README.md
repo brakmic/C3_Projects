@@ -41,7 +41,7 @@ Hello, world!
 #### Step 1: Compile to WebAssembly
 ```bash
 cd wasm
-c3c compile --target wasm32 -o math_lib math_lib.c3
+c3c compile --target wasm32 --no-entry -o math_lib math_lib.c3
 ```
 
 #### Step 2: Verify WASM compilation
@@ -49,11 +49,14 @@ c3c compile --target wasm32 -o math_lib math_lib.c3
 # Check if WASM file was created
 ls -la math_lib.wasm
 
-# Validate the WASM file
+# Validate the WASM file (WABT tools)
 wasm-validate math_lib.wasm
 
 # Convert to text format for inspection (optional)
 wasm2wat math_lib.wasm -o math_lib.wat
+
+# List exported functions
+wasm-objdump -x math_lib.wasm
 ```
 
 #### Step 3: Serve the web application
@@ -108,13 +111,16 @@ apt update && apt install -y libmicrohttpd-dev
 #### Step 2: Build and run the server
 ```bash
 cd webserver
-c3c compile -l microhttpd -o webserver webserver.c3
+make all
 ./webserver
 ```
 
 #### Step 3: Test the server
 ```bash
 # In another terminal, test the API
+make test
+
+# Or manually
 curl http://localhost:8080
 
 # Test in browser
@@ -140,7 +146,7 @@ wasm-decompile math_lib.wasm -o math_lib.dcmp
 #### Optimization options
 ```bash
 # Compile with optimization
-c3c compile --target wasm32 -O3 -o math_lib math_lib.c3
+c3c compile --target wasm32 --no-entry -O3 -o math_lib math_lib.c3
 
 # Check file size difference
 ls -lh math_lib.wasm
@@ -167,8 +173,17 @@ projects/
 │   ├── Makefile                  # Build automation
 └── webserver/
     ├── webserver.c3              # HTTP server implementation
-    └── favicon.ico               # Optional favicon file
+    ├── Makefile                  # Build automation
+    └── favicons/                 # Favicon images
 ```
+
+## C3 Compiler Version
+
+These projects target **C3 0.8.1+**. Key changes from earlier versions include:
+- The `@extern("name")` attribute has been removed; use `extern fn` keyword with `@cname("name")` for C interop
+- The `isz` type has been renamed to `sz`
+- Type properties now use `::` syntax (e.g. `int::size` instead of `int.sizeof`)
+- Optional values are created with `~` instead of `?` suffix
 
 ## Key Features Demonstrated
 

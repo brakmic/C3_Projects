@@ -4,12 +4,12 @@ import std::io;
 import libc;
 
 // libmicrohttpd bindings
-extern fn void* start_daemon(uint flags, ushort port, void* apc, void* apc_cls, void* dh, void* dh_cls, ...) @extern("MHD_start_daemon");
-extern fn void stop_daemon(void* daemon) @extern("MHD_stop_daemon");
-extern fn void* create_response_from_buffer(usz size, void* buffer, uint mode) @extern("MHD_create_response_from_buffer");
-extern fn void destroy_response(void* response) @extern("MHD_destroy_response");
-extern fn int queue_response(void* connection, uint status_code, void* response) @extern("MHD_queue_response");
-extern fn int add_response_header(void* response, char* header, char* content) @extern("MHD_add_response_header");
+extern fn void* start_daemon(uint flags, ushort port, void* apc, void* apc_cls, void* dh, void* dh_cls, ...) @cname("MHD_start_daemon");
+extern fn void stop_daemon(void* daemon) @cname("MHD_stop_daemon");
+extern fn void* create_response_from_buffer(usz size, void* buffer, uint mode) @cname("MHD_create_response_from_buffer");
+extern fn void destroy_response(void* response) @cname("MHD_destroy_response");
+extern fn int queue_response(void* connection, uint status_code, void* response) @cname("MHD_queue_response");
+extern fn int add_response_header(void* response, char* header, char* content) @cname("MHD_add_response_header");
 
 const uint MHD_USE_INTERNAL_POLLING_THREAD = 1;
 const uint MHD_USE_SELECT_INTERNALLY = 4;
@@ -19,7 +19,7 @@ const int MHD_YES = 1;
 const int MHD_NO = 0;
 
 // API endpoint handler
-fn int request_handler(void* cls, void* connection, char* url, char* method, char* version, char* upload_data, usz* upload_data_size, void** con_cls) @extern("request_handler") {
+fn int request_handler(void* cls, void* connection, char* url, char* method, char* version, char* upload_data, usz* upload_data_size, void** con_cls) {
     
     io::printfn("📡 Handler called: %s %s", method, url);
     

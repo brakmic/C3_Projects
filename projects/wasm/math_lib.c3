@@ -1,17 +1,17 @@
 module math_lib;
 
-fn double add(double a, double b) @extern("add") @wasm {
+fn double add(double a, double b) @wasm {
   return a + b;
 }
 
-fn double sub(double a, double b) @extern("sub") @wasm {
+fn double sub(double a, double b) @wasm {
   return a - b;
 }
 
-fn double mul(double a, double b) @extern("mul") @wasm {
+fn double mul(double a, double b) @wasm {
   return a * b;
 }
 
-fn double div(double a, double b) @extern("div") @wasm {
+fn double div(double a, double b) @wasm {
   return a / b;
 }

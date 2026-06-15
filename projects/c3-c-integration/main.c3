@@ -3,9 +3,9 @@ module main;
 import std::io;
 
 // C library bindings
-extern fn double add(double a, double b) @extern("add");
-extern fn double multiply(double a, double b) @extern("multiply");
-extern fn int factorial(int n) @extern("factorial");
+extern fn double add(double a, double b);
+extern fn double multiply(double a, double b);
+extern fn int factorial(int n);
 
 fn void main() {
     double result1 = add(10.5, 20.3);
