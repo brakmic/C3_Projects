@@ -11,18 +11,16 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      IMAGE: brakmic/c3dev@sha256:f73bbae2ffc2122f6694f283e8affc99e99f8730591f00b5dec6984b1ac4677d
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build dev container image
-        run: docker build -t c3-projects-devcontainer:ci .devcontainer
-
       - name: Verify toolchain and projects
         run: |
           docker run --rm \
-            --user root \
             -v "$PWD:/host_workspace" \
             -w /host_workspace \
-            c3-projects-devcontainer:ci \
+            "$IMAGE" \
             bash scripts/verify.sh

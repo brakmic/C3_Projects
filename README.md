@@ -30,7 +30,7 @@ The `.devcontainer/` configuration provides:
 
 ### Included Tools
 
-The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04. `.devcontainer/Dockerfile` adds a thin layer with packages the base image does not ship (`openssh-client` and `libmicrohttpd-dev`) and pins the base image by digest for reproducible rebuilds:
+The container uses the published [brakmic/C3Dev](https://github.com/brakmic/C3Dev) image on Ubuntu 26.04, pinned by digest for reproducible rebuilds. It includes `openssh-client` and `libmicrohttpd-dev`:
 
 - **C3 Compiler** (`c3c`) - Pinned stable release 0.8.5_1 with LSP support
 - **WebAssembly Tools** (WABT) - `wasm2wat`, `wat2wasm`, `wasm-validate`, `wasm-objdump`
@@ -39,8 +39,8 @@ The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26
 - **Build Tools** - GCC 15, Clang/LLD, CMake, Ninja, Make
 - **Debugging** - GDB, Valgrind, Strace
 - **Development Utilities** - Git and Git LFS, Python 3.14, lsd, nano with syntax highlighting
-- **SSH Client** - `ssh` and `ssh-keygen` for Git over SSH, added by the local layer
-- **Web Server Dependencies** - libmicrohttpd development headers for the `webserver` project, added by the local layer
+- **SSH Client** - `ssh` and `ssh-keygen` for Git over SSH
+- **Web Server Dependencies** - libmicrohttpd development headers for the `webserver` project
 
 ### VS Code Integration
 
@@ -51,6 +51,7 @@ The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26
 ### Container Configuration
 
 - **User**: `c3dev` with sudo privileges
+- **Image**: `brakmic/c3dev` pinned to `sha256:f73bbae2…`; includes C3, OpenSSH, libmicrohttpd, and the documented toolchain
 - **Git identity**: `Harris Brakmic <brakmic@gmail.com>`; commits are signed with the mounted SSH signing key by `configure-git.sh`
 - **Networking**: The `devnetwork` bridge network is created automatically when missing, and the container starts on it
 - **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach; Docker socket for container workflows
@@ -67,7 +68,7 @@ The `setup-workspace.mjs` script automatically creates a VS Code workspace with 
 
 The host's `~/.ssh` directory must exist before the container starts because it is bind-mounted. If it does not exist, create it with `mkdir "%USERPROFILE%\.ssh"` on Windows or `mkdir -p ~/.ssh` on Linux and macOS.
 
-The base image ships Git without the OpenSSH client. The local `.devcontainer/Dockerfile` adds `openssh-client` (and `libmicrohttpd-dev`) on top of the pinned `brakmic/c3dev` digest; rebuild the container after editing it. Verify with `ssh -V`.
+The published image includes the OpenSSH client and libmicrohttpd, and the container pins its digest. Verify with `ssh -V`.
 
 ### Verify the Container
 
@@ -94,11 +95,10 @@ See the [projects directory](projects/README.md) for detailed examples including
 ```text
 /
 ├── .devcontainer/
-│   ├── Dockerfile                 # Pinned base plus OpenSSH and libmicrohttpd
 │   ├── configure-git.sh           # Git identity and SSH commit signing
 │   ├── devcontainer.json          # VS Code dev container configuration
 │   └── setup-workspace.mjs        # Automated workspace setup script
-├── .github/workflows/verify.yml   # CI: build image and verify all projects
+├── .github/workflows/verify.yml   # CI: verify all projects in the pinned image
 ├── .vscode/                       # Shared settings and tasks
 ├── scripts/verify.sh              # Toolchain and project verification
 ├── .gitattributes                 # Repository-wide line ending rules
@@ -142,7 +142,7 @@ If startup fails with `bind source path does not exist: /.ssh`, the host SSH dir
 
 If `docker info` inside the container reports `permission denied ... /var/run/docker.sock`, the container cannot reach the Docker Desktop socket. The configuration joins group `0` because Docker Desktop exposes the socket as `root:root 660`. On a Linux host where the socket belongs to a different `docker` GID, replace `0` in `runArgs` with that GID and rebuild the container.
 
-If `ssh` is not found, the container is still running the base image. Run "Dev Containers: Rebuild Container" so the local `Dockerfile` layer is applied.
+If `ssh` is not found, the container is running an older image. Rebuild or reopen the container so it uses the pinned image.
 
 ### C3 Compiler Issues
 

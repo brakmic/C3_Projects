@@ -1,10 +1,7 @@
 {
   "name": "C3 Development Environment",
-  // The base image lacks openssh-client and libmicrohttpd-dev; the local layer adds them.
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
-  },
+  // Pinned published image; includes OpenSSH and libmicrohttpd.
+  "image": "brakmic/c3dev@sha256:f73bbae2ffc2122f6694f283e8affc99e99f8730591f00b5dec6984b1ac4677d",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
   "customizations": {
