@@ -3,10 +3,7 @@
   // The base image lacks openssh-client and libmicrohttpd-dev; the local layer adds them.
   "build": {
     "dockerfile": "Dockerfile",
-    "context": ".",
-    "args": {
-      "BASE_IMAGE": "brakmic/c3dev:latest"
-    }
+    "context": "."
   },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
@@ -31,7 +28,7 @@
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/c3dev/.host-ssh,type=bind,consistency=cached"
   ],
-  "postAttachCommand": "mkdir -p /home/c3dev/.ssh && rm -f /home/c3dev/.ssh/* 2>/dev/null; cp -f /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null; chmod 700 /home/c3dev/.ssh; chmod 600 /home/c3dev/.ssh/* 2>/dev/null; true",
+  "postAttachCommand": "mkdir -p /home/c3dev/.ssh && rm -f /home/c3dev/.ssh/* 2>/dev/null; cp -f /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null; chmod 700 /home/c3dev/.ssh; chmod 600 /home/c3dev/.ssh/* 2>/dev/null; bash /host_workspace/.devcontainer/configure-git.sh; true",
   "forwardPorts": [3000, 8080],
   "portsAttributes": {
     "3000": { "label": "WASM demo (python http.server)" },
