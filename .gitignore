@@ -63,3 +63,12 @@ projects/lib/
 # wasm & wat files
 *.wasm
 *.wat
+
+# wasm-decompile output
+*.dcmp
+
+# compiled demo binaries
+projects/hello/hello
+projects/c3-c-integration/c3_static_demo
+projects/c3-c-integration/c3_shared_demo
+projects/webserver/webserver

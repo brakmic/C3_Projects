@@ -30,7 +30,7 @@ The `.devcontainer/` configuration provides:
 
 ### Included Tools
 
-The container image is built from [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04:
+The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04. `.devcontainer/Dockerfile` adds a thin layer with packages the base image does not ship (`openssh-client` and `libmicrohttpd-dev`):
 
 - **C3 Compiler** (`c3c`) - Pinned stable release 0.8.5_1 with LSP support
 - **WebAssembly Tools** (WABT) - `wasm2wat`, `wat2wasm`, `wasm-validate`, `wasm-objdump`
@@ -39,6 +39,8 @@ The container image is built from [brakmic/C3Dev](https://github.com/brakmic/C3D
 - **Build Tools** - GCC 15, Clang/LLD, CMake, Ninja, Make
 - **Debugging** - GDB, Valgrind, Strace
 - **Development Utilities** - Git and Git LFS, Python 3.14, lsd, nano with syntax highlighting
+- **SSH Client** - `ssh` and `ssh-keygen` for Git over SSH, added by the local layer
+- **Web Server Dependencies** - libmicrohttpd development headers for the `webserver` project, added by the local layer
 
 ### VS Code Integration
 
@@ -50,7 +52,9 @@ The container image is built from [brakmic/C3Dev](https://github.com/brakmic/C3D
 
 - **User**: `c3dev` with sudo privileges
 - **Networking**: The `devnetwork` bridge network is created automatically when missing, and the container starts on it
-- **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach
+- **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach; Docker socket for container workflows
+- **Ports**: `3000` (WASM demo) and `8080` (C3 web server) are forwarded and labeled
+- **Docker Socket**: Docker Desktop exposes the socket as `root:root` with mode `660`, so the container joins group `0` in `runArgs`. On a Linux host whose socket belongs to a different `docker` GID, replace `0` with that GID
 - **Workspace Setup**: Automated folder structure creation plus git settings for the mounted workspace
 
 The `setup-workspace.mjs` script automatically creates a VS Code workspace with organized folders:
@@ -62,7 +66,19 @@ The `setup-workspace.mjs` script automatically creates a VS Code workspace with 
 
 The host's `~/.ssh` directory must exist before the container starts because it is bind-mounted. If it does not exist, create it with `mkdir "%USERPROFILE%\.ssh"` on Windows or `mkdir -p ~/.ssh` on Linux and macOS.
 
-The current image ships Git without the OpenSSH client. To use Git over SSH inside the container, add `openssh-client` to the [C3Dev image](https://github.com/brakmic/C3Dev) and rebuild it.
+The base image ships Git without the OpenSSH client. The local `.devcontainer/Dockerfile` adds `openssh-client` (and `libmicrohttpd-dev`) on top of `brakmic/c3dev:latest`; rebuild the container after editing it. Verify with `ssh -V`.
+
+### Verify the Container
+
+```bash
+c3c --version
+ssh -V
+node --version
+make -C projects/webserver all
+make -C projects/c3-c-integration test
+```
+
+All commands should succeed without additional `apt install` steps.
 
 ## Project Examples
 
@@ -79,8 +95,10 @@ See the [projects directory](projects/README.md) for detailed examples including
 ```text
 /
 ├── .devcontainer/
+│   ├── Dockerfile                 # Thin layer adding OpenSSH and libmicrohttpd
 │   ├── devcontainer.json          # VS Code dev container configuration
 │   └── setup-workspace.mjs        # Automated workspace setup script
+├── .gitattributes                 # Repository-wide line ending rules
 ├── .gitignore                     # Git ignore patterns
 ├── README.md                      # This file
 ├── LICENSE                        # MIT license
@@ -118,6 +136,10 @@ docker logs <container_id>
 ```
 
 If startup fails with `bind source path does not exist: /.ssh`, the host SSH directory is missing. Create it as described above. The `devnetwork` network does not need manual setup, because it is recreated automatically when absent.
+
+If `docker info` inside the container reports `permission denied ... /var/run/docker.sock`, the container cannot reach the Docker Desktop socket. The configuration joins group `0` because Docker Desktop exposes the socket as `root:root 660`. On a Linux host where the socket belongs to a different `docker` GID, replace `0` in `runArgs` with that GID and rebuild the container.
+
+If `ssh` is not found, the container is still running the base image. Run "Dev Containers: Rebuild Container" so the local `Dockerfile` layer is applied.
 
 ### C3 Compiler Issues
 

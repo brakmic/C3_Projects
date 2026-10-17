@@ -34,9 +34,30 @@ const workspaceConfig = {
       path: "/host_workspace/scratchpad"
     }
   ],
-  settings: {}
+  settings: {
+    "files.eol": "\n",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "search.exclude": {
+      "**/*.wasm": true,
+      "**/*.wat": true
+    },
+    "terminal.integrated.defaultProfile.linux": "bash"
+  },
+  extensions: {
+    recommendations: ["c3.vscode-c3"]
+  }
 };
 
-// Write the workspace file
-fs.writeFileSync(workspaceFilePath, JSON.stringify(workspaceConfig, null, 2));
-console.log(`Workspace file created: ${workspaceFilePath}`);
+// Write the workspace file only when its content changes.
+const workspaceJson = JSON.stringify(workspaceConfig, null, 2);
+const previousJson = fs.existsSync(workspaceFilePath)
+  ? fs.readFileSync(workspaceFilePath, "utf8")
+  : "";
+
+if (previousJson === workspaceJson) {
+  console.log(`Workspace file unchanged: ${workspaceFilePath}`);
+} else {
+  fs.writeFileSync(workspaceFilePath, workspaceJson);
+  console.log(`Workspace file created: ${workspaceFilePath}`);
+}

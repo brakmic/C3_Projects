@@ -1,6 +1,13 @@
 {
   "name": "C3 Development Environment",
-  "image": "brakmic/c3dev:latest",
+  // The base image lacks openssh-client and libmicrohttpd-dev; the local layer adds them.
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".",
+    "args": {
+      "BASE_IMAGE": "brakmic/c3dev:latest"
+    }
+  },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/host_workspace,type=bind,consistency=cached",
   "customizations": {
@@ -9,7 +16,10 @@
         "files.exclude": {
           "**/.git": true,
           "**/.DS_Store": true
-        }
+        },
+        "files.eol": "\n",
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
       },
       "extensions": [
         "c3.vscode-c3"
@@ -22,10 +32,16 @@
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/c3dev/.host-ssh,type=bind,consistency=cached"
   ],
   "postAttachCommand": "mkdir -p /home/c3dev/.ssh && rm -f /home/c3dev/.ssh/* 2>/dev/null; cp -f /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null; chmod 700 /home/c3dev/.ssh; chmod 600 /home/c3dev/.ssh/* 2>/dev/null; true",
-  "forwardPorts": [],
+  "forwardPorts": [3000, 8080],
+  "portsAttributes": {
+    "3000": { "label": "WASM demo (python http.server)" },
+    "8080": { "label": "C3 web server" }
+  },
   "initializeCommand": "docker network inspect devnetwork || docker network create devnetwork",
-  "runArgs": ["--network=devnetwork"],
-  "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && mkdir -p /home/c3dev/.vscode-server && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace && git config --global --add safe.directory /host_workspace && git config --global core.autocrlf input",
+  // Docker Desktop exposes the socket as root:root 660. Add the root group so
+  // c3dev can reach it. On a Linux host, match the host's docker GID instead.
+  "runArgs": ["--network=devnetwork", "--group-add", "0"],
+  "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && mkdir -p /home/c3dev/.vscode-server && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace && git config --global --add safe.directory /host_workspace && git config --global core.autocrlf input && git config --global core.filemode false",
   "remoteUser": "c3dev",
   "containerEnv": {
     "HOST_WORKSPACE": "${localWorkspaceFolder}"
