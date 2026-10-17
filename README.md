@@ -30,7 +30,7 @@ The `.devcontainer/` configuration provides:
 
 ### Included Tools
 
-The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04. `.devcontainer/Dockerfile` adds a thin layer with packages the base image does not ship (`openssh-client` and `libmicrohttpd-dev`):
+The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04. `.devcontainer/Dockerfile` adds a thin layer with packages the base image does not ship (`openssh-client` and `libmicrohttpd-dev`) and pins the base image by digest for reproducible rebuilds:
 
 - **C3 Compiler** (`c3c`) - Pinned stable release 0.8.5_1 with LSP support
 - **WebAssembly Tools** (WABT) - `wasm2wat`, `wat2wasm`, `wasm-validate`, `wasm-objdump`
@@ -51,6 +51,7 @@ The base image is [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26
 ### Container Configuration
 
 - **User**: `c3dev` with sudo privileges
+- **Git identity**: `Harris Brakmic <brakmic@gmail.com>`; commits are signed with the mounted SSH signing key by `configure-git.sh`
 - **Networking**: The `devnetwork` bridge network is created automatically when missing, and the container starts on it
 - **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach; Docker socket for container workflows
 - **Ports**: `3000` (WASM demo) and `8080` (C3 web server) are forwarded and labeled
@@ -66,19 +67,17 @@ The `setup-workspace.mjs` script automatically creates a VS Code workspace with 
 
 The host's `~/.ssh` directory must exist before the container starts because it is bind-mounted. If it does not exist, create it with `mkdir "%USERPROFILE%\.ssh"` on Windows or `mkdir -p ~/.ssh` on Linux and macOS.
 
-The base image ships Git without the OpenSSH client. The local `.devcontainer/Dockerfile` adds `openssh-client` (and `libmicrohttpd-dev`) on top of `brakmic/c3dev:latest`; rebuild the container after editing it. Verify with `ssh -V`.
+The base image ships Git without the OpenSSH client. The local `.devcontainer/Dockerfile` adds `openssh-client` (and `libmicrohttpd-dev`) on top of the pinned `brakmic/c3dev` digest; rebuild the container after editing it. Verify with `ssh -V`.
 
 ### Verify the Container
 
+Run the repository verification script; it checks the toolchain, builds every project, and calls the web server:
+
 ```bash
-c3c --version
-ssh -V
-node --version
-make -C projects/webserver all
-make -C projects/c3-c-integration test
+bash scripts/verify.sh
 ```
 
-All commands should succeed without additional `apt install` steps.
+The same script runs in CI (`.github/workflows/verify.yml`). Individual checks are `c3c --version`, `ssh -V`, `node --version`, `make -C projects/webserver all`, and `make -C projects/c3-c-integration test`, all of which should succeed without additional `apt install` steps.
 
 ## Project Examples
 
@@ -95,9 +94,13 @@ See the [projects directory](projects/README.md) for detailed examples including
 ```text
 /
 ├── .devcontainer/
-│   ├── Dockerfile                 # Thin layer adding OpenSSH and libmicrohttpd
+│   ├── Dockerfile                 # Pinned base plus OpenSSH and libmicrohttpd
+│   ├── configure-git.sh           # Git identity and SSH commit signing
 │   ├── devcontainer.json          # VS Code dev container configuration
 │   └── setup-workspace.mjs        # Automated workspace setup script
+├── .github/workflows/verify.yml   # CI: build image and verify all projects
+├── .vscode/                       # Shared settings and tasks
+├── scripts/verify.sh              # Toolchain and project verification
 ├── .gitattributes                 # Repository-wide line ending rules
 ├── .gitignore                     # Git ignore patterns
 ├── README.md                      # This file
@@ -156,8 +159,9 @@ c3c --help
 1. Fork the repository
 2. Open in VS Code with dev containers
 3. Make your changes in the containerized environment
-4. Test your projects following the [project documentation](projects/README.md)
-5. Submit a pull request
+4. Run `bash scripts/verify.sh`
+5. Test specific projects following the [project documentation](projects/README.md)
+6. Submit a pull request
 
 The dev container ensures all contributors have the same development environment.
 

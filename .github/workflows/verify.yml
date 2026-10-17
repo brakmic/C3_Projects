@@ -1,0 +1,28 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build dev container image
+        run: docker build -t c3-projects-devcontainer:ci .devcontainer
+
+      - name: Verify toolchain and projects
+        run: |
+          docker run --rm \
+            --user root \
+            -v "$PWD:/host_workspace" \
+            -w /host_workspace \
+            c3-projects-devcontainer:ci \
+            bash scripts/verify.sh
