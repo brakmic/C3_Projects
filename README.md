@@ -30,12 +30,15 @@ The `.devcontainer/` configuration provides:
 
 ### Included Tools
 
-- **C3 Compiler** (`c3c`) - Latest stable release (0.8.1+) with LSP support
-- **WebAssembly Tools** (`wasm2wat`, `wasm-validate`, `wasm-objdump`)
-- **Node.js 22** with npm, yarn, TypeScript, and development tools
+The container image is built from [brakmic/C3Dev](https://github.com/brakmic/C3Dev) on Ubuntu 26.04:
+
+- **C3 Compiler** (`c3c`) - Pinned stable release 0.8.5_1 with LSP support
+- **WebAssembly Tools** (WABT) - `wasm2wat`, `wat2wasm`, `wasm-validate`, `wasm-objdump`
+- **Node.js 24** (LTS) with npm, yarn, TypeScript, and development tools
 - **Docker** engine for containerized development
-- **Build Tools** - GCC 14, CMake, Ninja, Make
-- **Development Utilities** - Git, Python 3, lsd, nano with syntax highlighting
+- **Build Tools** - GCC 15, Clang/LLD, CMake, Ninja, Make
+- **Debugging** - GDB, Valgrind, Strace
+- **Development Utilities** - Git and Git LFS, Python 3.14, lsd, nano with syntax highlighting
 
 ### VS Code Integration
 
@@ -46,9 +49,9 @@ The `.devcontainer/` configuration provides:
 ### Container Configuration
 
 - **User**: `c3dev` with sudo privileges
-- **Networking**: Custom Docker network for multi-container development
-- **Mounts**: Host workspace accessible at `/host_workspace`
-- **Workspace Setup**: Automated folder structure creation
+- **Networking**: The `devnetwork` bridge network is created automatically when missing, and the container starts on it
+- **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach
+- **Workspace Setup**: Automated folder structure creation plus git settings for the mounted workspace
 
 The `setup-workspace.mjs` script automatically creates a VS Code workspace with organized folders:
 
@@ -56,6 +59,10 @@ The `setup-workspace.mjs` script automatically creates a VS Code workspace with 
 - Host Workspace (`/host_workspace`)
 - Projects (`/host_workspace/projects`)
 - Scratchpad (`/host_workspace/scratchpad`)
+
+The host's `~/.ssh` directory must exist before the container starts because it is bind-mounted. If it does not exist, create it with `mkdir "%USERPROFILE%\.ssh"` on Windows or `mkdir -p ~/.ssh` on Linux and macOS.
+
+The current image ships Git without the OpenSSH client. To use Git over SSH inside the container, add `openssh-client` to the [C3Dev image](https://github.com/brakmic/C3Dev) and rebuild it.
 
 ## Project Examples
 
@@ -69,7 +76,7 @@ See the [projects directory](projects/README.md) for detailed examples including
 
 ## Repository Structure
 
-```
+```text
 /
 ├── .devcontainer/
 │   ├── devcontainer.json          # VS Code dev container configuration
@@ -109,6 +116,8 @@ python3 --version
 # Check container logs for setup errors
 docker logs <container_id>
 ```
+
+If startup fails with `bind source path does not exist: /.ssh`, the host SSH directory is missing. Create it as described above. The `devnetwork` network does not need manual setup, because it is recreated automatically when absent.
 
 ### C3 Compiler Issues
 

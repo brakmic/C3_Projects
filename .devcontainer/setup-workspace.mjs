@@ -10,6 +10,10 @@ if (!fs.existsSync(dirPath)) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
+// Ensure the host scratchpad folder exists so the workspace has no missing folders.
+// It is gitignored and only contains local notes.
+fs.mkdirSync("/host_workspace/scratchpad", { recursive: true });
+
 // Define the workspace configuration
 const workspaceConfig = {
   folders: [

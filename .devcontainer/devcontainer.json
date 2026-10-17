@@ -19,13 +19,13 @@
   "mounts": [
     "source=${localWorkspaceFolder}/.devcontainer/setup-workspace.mjs,target=/workspace/.devcontainer/setup-workspace.mjs,type=bind",
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
-    "source=${localEnv:HOME}/.ssh,target=/home/c3dev/.host-ssh,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/c3dev/.host-ssh,type=bind,consistency=cached"
   ],
-  "postAttachCommand": "ln -sf /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null || true",
+  "postAttachCommand": "mkdir -p /home/c3dev/.ssh && rm -f /home/c3dev/.ssh/* 2>/dev/null; cp -f /home/c3dev/.host-ssh/* /home/c3dev/.ssh/ 2>/dev/null; chmod 700 /home/c3dev/.ssh; chmod 600 /home/c3dev/.ssh/* 2>/dev/null; true",
   "forwardPorts": [],
   "initializeCommand": "docker network inspect devnetwork || docker network create devnetwork",
   "runArgs": ["--network=devnetwork"],
-  "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace",
+  "postCreateCommand": "node /workspace/.devcontainer/setup-workspace.mjs && mkdir -p /home/c3dev/.vscode-server && ln -sf /workspace/dev.code-workspace /home/c3dev/.vscode-server/dev.code-workspace && git config --global --add safe.directory /host_workspace && git config --global core.autocrlf input",
   "remoteUser": "c3dev",
   "containerEnv": {
     "HOST_WORKSPACE": "${localWorkspaceFolder}"
