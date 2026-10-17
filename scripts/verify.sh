@@ -47,10 +47,15 @@ try:
         raise SystemExit("webserver did not listen on port 8080")
 
     with urllib.request.urlopen("http://127.0.0.1:8080/", timeout=3) as response:
-        body = response.read().decode()
-        if response.status != 200 or '"status": "ok"' not in body:
-            raise SystemExit(f"unexpected response: {response.status} {body}")
-        print("webserver response:", body)
+        content_type = response.headers.get_content_type()
+        payload = __import__("json").loads(response.read())
+        expected = {"message": "Hello from C3!", "status": "ok"}
+        if response.status != 200 or content_type != "application/json" or payload != expected:
+            raise SystemExit(
+                f"unexpected response: status={response.status}, "
+                f"content_type={content_type}, payload={payload}"
+            )
+        print("webserver response:", payload)
 finally:
     server.terminate()
     try:

@@ -12,17 +12,19 @@ This project includes a complete dev container configuration for instant setup:
 2. Clone this repository
 3. Open the folder in VS Code
 4. When prompted, click "Reopen in Container" or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
-5. The container will automatically build and configure everything needed
+5. The container will pull the pinned image and configure the development environment
 
 ### Option 2: Direct Docker Usage
 
 ```bash
-# Pull the pre-built image
-docker pull brakmic/c3dev:latest
+# Pull the exact image used by the Dev Container and CI
+docker pull brakmic/c3dev@sha256:f73bbae2ffc2122f6694f283e8affc99e99f8730591f00b5dec6984b1ac4677d
 
 # Run with volume mount
-docker run -it --rm -v $(pwd):/host_workspace brakmic/c3dev:latest
+docker run -it --rm -v "$(pwd):/host_workspace" -w /host_workspace brakmic/c3dev@sha256:f73bbae2ffc2122f6694f283e8affc99e99f8730591f00b5dec6984b1ac4677d
 ```
+
+The digest keeps direct Docker usage aligned with the Dev Container and CI. The `latest` tag is available for convenience but may move independently.
 
 ## Dev Container Features
 
@@ -56,7 +58,7 @@ The container uses the published [brakmic/C3Dev](https://github.com/brakmic/C3De
 - **Networking**: The `devnetwork` bridge network is created automatically when missing, and the container starts on it
 - **Mounts**: Host workspace at `/host_workspace`; host SSH keys at `/home/c3dev/.host-ssh`, copied to `~/.ssh` with permissions `600` on attach; Docker socket for container workflows
 - **Ports**: `3000` (WASM demo) and `8080` (C3 web server) are forwarded and labeled
-- **Docker Socket**: Docker Desktop exposes the socket as `root:root` with mode `660`, so the container joins group `0` in `runArgs`. On a Linux host whose socket belongs to a different `docker` GID, replace `0` with that GID
+- **Docker Socket**: Optional, root-equivalent access to the host Docker daemon. Docker Desktop exposes the socket as `root:root` with mode `660`, so the container joins group `0` in `runArgs`. On Linux, use the socket's group ID if Docker access is needed
 - **Workspace Setup**: Automated folder structure creation plus git settings for the mounted workspace
 
 The `setup-workspace.mjs` script automatically creates a VS Code workspace with organized folders:
@@ -69,6 +71,10 @@ The `setup-workspace.mjs` script automatically creates a VS Code workspace with 
 The host's `~/.ssh` directory must exist before the container starts because it is bind-mounted. If it does not exist, create it with `mkdir "%USERPROFILE%\.ssh"` on Windows or `mkdir -p ~/.ssh` on Linux and macOS.
 
 The published image includes the OpenSSH client and libmicrohttpd, and the container pins its digest. Verify with `ssh -V`.
+
+### Docker Socket Security
+
+Access to `/var/run/docker.sock` is effectively host-root access: a process in the container can ask the daemon to start privileged containers or mount host filesystems. This project enables that access for Docker workflows, but ordinary C3 development does not require it. To disable it, remove the Docker socket entry from `mounts` and remove `"--group-add", "0"` from `runArgs` (keep `"--network=devnetwork"`). The Docker CLI will remain installed but cannot control the host daemon.
 
 ### Verify the Container
 
@@ -140,7 +146,7 @@ docker logs <container_id>
 
 If startup fails with `bind source path does not exist: /.ssh`, the host SSH directory is missing. Create it as described above. The `devnetwork` network does not need manual setup, because it is recreated automatically when absent.
 
-If `docker info` inside the container reports `permission denied ... /var/run/docker.sock`, the container cannot reach the Docker Desktop socket. The configuration joins group `0` because Docker Desktop exposes the socket as `root:root 660`. On a Linux host where the socket belongs to a different `docker` GID, replace `0` in `runArgs` with that GID and rebuild the container.
+If `docker info` inside the container reports `permission denied ... /var/run/docker.sock`, check that Docker socket access is intended and enabled. Docker Desktop exposes the socket as `root:root 660`; on Linux, set the group ID in `runArgs` to the socket's owning GID and rebuild.
 
 If `ssh` is not found, the container is running an older image. Rebuild or reopen the container so it uses the pinned image.
 
