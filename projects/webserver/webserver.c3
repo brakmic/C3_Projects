@@ -20,46 +20,46 @@ const int MHD_NO = 0;
 
 // API endpoint handler
 fn int request_handler(void* cls, void* connection, char* url, char* method, char* version, char* upload_data, usz* upload_data_size, void** con_cls) {
-    
-    io::printfn("📡 Handler called: %s %s", method, url);
-    
+
+    io::printfn("📡 Handler called: %s %s", (ZString)method, (ZString)url);
+
     String json = `{"message": "Hello from C3!", "status": "ok"}`;
-    
+
     void* response = create_response_from_buffer(json.len, (void*)json.ptr, MHD_RESPMEM_PERSISTENT);
     if (!response) {
         io::printn("❌ Failed to create response");
         return MHD_NO;
     }
-    
+
     add_response_header(response, "Content-Type", "application/json");
-    
+
     int queue_result = queue_response(connection, MHD_HTTP_OK, response);
     io::printfn("📤 Response queued with result: %d", queue_result);
-    
+
     destroy_response(response);
-    
+
     io::printn("✅ Handler returning MHD_YES");
     return MHD_YES;
 }
 
 fn void main() {
     io::printn("Starting minimal C3 API server on port 8080...");
-    
+
     // Try with different daemon flags
     void* daemon = start_daemon(MHD_USE_SELECT_INTERNALLY, 8080, null, null, &request_handler, null, 0);
-    
+
     if (!daemon) {
         io::printn("❌ Failed to start server!");
         return;
     }
-    
+
     io::printn("✅ Server started successfully!");
     io::printn("🌐 Try: curl http://localhost:8080");
     io::printn("🌐 Or open: http://localhost:8080");
     io::printn("Press Enter to stop...");
-    
+
     libc::getchar();
-    
+
     stop_daemon(daemon);
     io::printn("🛑 Server stopped.");
 }
